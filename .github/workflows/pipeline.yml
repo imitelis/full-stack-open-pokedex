@@ -3,7 +3,7 @@ name: Deployment pipeline
 on:
   push:
     branches:
-      - main
+      - master
       # note that your "main" branch might be called main instead of master
 
 jobs:
@@ -18,3 +18,5 @@ jobs:
         run: npm install
       - name: Check style        
         run: npm run eslint
+      - name: Build app
+        run: npm run build
