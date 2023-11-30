@@ -9,9 +9,9 @@ on:
 jobs:
   simple_deployment_pipeline:    
     runs-on: ubuntu-20.04    
-    steps:      
+    steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3        
+      - uses: actions/setup-node@v3 
         with:          
           node-version: '16'
       - name: Install dependencies
@@ -28,8 +28,9 @@ jobs:
           command: npm run test:e2e
           start: npm run start-prod
           wait-on: http://localhost:5000
-      - name: Fly.io deploy
-        uses: superfly/flyctl-actions/setup-flyctl@master  
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy flyctl
         run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
