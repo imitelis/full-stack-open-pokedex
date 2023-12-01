@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-    pull_request:    
+    pull_request:
       branches: [master]    
       types: [opened, synchronize]
       
@@ -35,14 +35,17 @@ jobs:
       - name: Setup flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Deploy flyctl
+        if: ${{ github.event_name == 'push' }}
         run: flyctl deploy --remote-only
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}      
       - name: Visit app
+        if: ${{ github.event_name == 'push' }}
         run: |
           app_url="https://imitelis-pokedex.fly.dev/"
-          curl -I $app_url          
+          curl -I $app_url
       - name: Health check
+        if: ${{ github.event_name == 'push' }}
         run: |
           set -e
           flyctl ssh console -t ${{ secrets.FLY_API_TOKEN }} <<EOF
