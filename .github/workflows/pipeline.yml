@@ -8,7 +8,7 @@ on:
 
 jobs:
   simple_deployment_pipeline:    
-    runs-on: ubuntu-20.04    
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3 
@@ -32,5 +32,19 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Deploy flyctl
         run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - name: Visit app
+        run: |
+          app_url="https://imitelis-pokedex.fly.dev/"
+          curl -I $app_url          
+      - name: Health check
+        run: |
+          set -e
+          flyctl ssh console -t ${{ secrets.FLY_API_TOKEN }} <<EOF
+          chmod +x health_check.sh
+          ./health_check.sh
+          exit
+          EOF
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

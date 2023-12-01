@@ -37,6 +37,10 @@ RUN npm prune --omit=dev
 # Final stage for app image
 FROM base
 
+# Install curl to run health check
+RUN apt-get update -qq && \
+    apt-get install -y curl
+
 # Copy built application
 COPY --from=build /app /app
 
