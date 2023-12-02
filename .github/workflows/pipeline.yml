@@ -35,17 +35,20 @@ jobs:
       - name: Setup flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Deploy flyctl
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push' && !contains(toJson(github.event.commits.*.message), '#skip') }}
         run: flyctl deploy --remote-only
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}      
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          COMMIT_MESSAGES: ${{ toJson(github.event.commits.*.message) }}
       - name: Visit app
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push' && !contains(toJson(github.event.commits.*.message), '#skip') }}
         run: |
           app_url="https://imitelis-pokedex.fly.dev/"
           curl -I $app_url
+        env:
+          COMMIT_MESSAGES: ${{ toJson(github.event.commits.*.message) }}
       - name: Health check
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push' && !contains(toJson(github.event.commits.*.message), '#skip') }}
         run: |
           set -e
           flyctl ssh console -t ${{ secrets.FLY_API_TOKEN }} <<EOF
@@ -55,12 +58,15 @@ jobs:
           EOF
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          COMMIT_MESSAGES: ${{ toJson(github.event.commits.*.message) }}
   tag_release:
     needs: [simple_deployment_pipeline]
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       - name: Bump version and push tag
+        if: ${{ github.event_name == 'push' && !contains(toJson(github.event.commits.*.message), '#skip') }}
         uses: anothrNick/github-tag-action@1.67.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_MESSAGES: ${{ toJson(github.event.commits.*.message) }}
