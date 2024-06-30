@@ -71,7 +71,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_MESSAGES: ${{ toJson(github.event.commits.*.message) }}
   discord_notification:
-    needs: [simple_deployment_pipeline]
+    needs: [tag_release]
+    runs-on: ubuntu-20.04  
     steps:
       - name: Notify Success
         uses: rjstone/discord-webhook-notify@v1
