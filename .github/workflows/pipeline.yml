@@ -5,13 +5,14 @@ on:
     branches:
       - master
     pull_request:
-      branches: [master]    
-      types: [opened, synchronize]
-      
       # note that your "main" branch might be called main instead of master
+      branches: [master]
+      types: [opened, synchronize]
+    schedule:
+    - cron: '0 0 * * *'
 
 jobs:
-  simple_deployment_pipeline:    
+  deployment_pipeline:    
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -60,7 +61,7 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           COMMIT_MESSAGES: ${{ toJson(github.event.commits.*.message) }}
   tag_release:
-    needs: [simple_deployment_pipeline]
+    needs: [deployment_pipeline]
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -70,21 +71,33 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_MESSAGES: ${{ toJson(github.event.commits.*.message) }}
-  discord_notification:
+  build_notification:
     needs: [tag_release]
     runs-on: ubuntu-20.04  
     steps:
-      - name: Notify Success
+      - name: Notify success
         uses: rjstone/discord-webhook-notify@v1
         if: ${{ success() }}
         with:
           severity: info
-          details: A new version of Pokedex deployed!
+          details: A new version of Pokédex deployed
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
-      - name: Notify Failure
+      - name: Notify failure
         uses: rjstone/discord-webhook-notify@v1
         if: ${{ failure() }}
         with:
           severity: error
           details: Build failed
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+  health_check:
+    needs: [build_notification]
+    runs-on: ubuntu-20.04  
+    steps:
+      - name: Check the deployed service URL
+      if: ${{ github.event_name == 'schedule' }}
+      uses: jtalk/url-health-check-action@v4
+      with:
+        url: https://imitelis-pokedex.fly.dev/
+        follow-redirect: false
+        max-attempts: 3
+        retry-delay: 5s
