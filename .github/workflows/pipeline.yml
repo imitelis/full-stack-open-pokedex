@@ -93,11 +93,11 @@ jobs:
     needs: [build_notification]
     runs-on: ubuntu-20.04  
     steps:
-      - name: Check the deployed service URL
-      if: ${{ github.event_name == 'schedule' }}
-      uses: jtalk/url-health-check-action@v4
-      with:
-        url: https://imitelis-pokedex.fly.dev/
-        follow-redirect: false
-        max-attempts: 3
-        retry-delay: 5s
+      - name: Periodic health check
+        uses: jtalk/url-health-check-action@v4
+        if: ${{ github.event_name == 'schedule' }}
+        with:
+          url: https://imitelis-pokedex.fly.dev/
+          follow-redirect: false
+          max-attempts: 3
+          retry-delay: 5s
