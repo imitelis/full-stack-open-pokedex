@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3 
-        with:          
+        with:
           node-version: '16'
       - name: Install dependencies
         run: npm install
@@ -63,7 +63,7 @@ jobs:
 
   tag_release:
     needs: [deployment_pipeline]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Bump version and push tag
@@ -75,7 +75,7 @@ jobs:
 
   build_notification:
     needs: [tag_release]
-    runs-on: ubuntu-20.04  
+    runs-on: ubuntu-latest
     steps:
       - name: Notify success
         uses: rjstone/discord-webhook-notify@v1
@@ -94,7 +94,7 @@ jobs:
           
   health_check:
     needs: [build_notification]
-    runs-on: ubuntu-20.04  
+    runs-on: ubuntu-latest
     steps:
       - name: Periodic health check
         uses: jtalk/url-health-check-action@v4
