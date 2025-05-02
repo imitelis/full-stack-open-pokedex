@@ -13,7 +13,7 @@ on:
 
 jobs:
   deployment_pipeline:    
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3 
@@ -23,10 +23,10 @@ jobs:
         run: npm install
       - name: Check style
         run: npm run eslint
+      - name: Unit tests
+        run: npm run test
       - name: Build app
         run: npm run build
-      - name: Jest tests
-        run: npm run test
       - name: E2E tests
         uses: cypress-io/github-action@v5
         with:
@@ -44,7 +44,7 @@ jobs:
       - name: Visit app
         if: ${{ github.event_name == 'push' && !contains(toJson(github.event.commits.*.message), '#skip') }}
         run: |
-          app_url="https://imitelis-pokedex.fly.dev/"
+          app_url="${{ secrets.FLY_APP_URL }}"
           curl -I $app_url
         env:
           COMMIT_MESSAGES: ${{ toJson(github.event.commits.*.message) }}
@@ -60,6 +60,7 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           COMMIT_MESSAGES: ${{ toJson(github.event.commits.*.message) }}
+
   tag_release:
     needs: [deployment_pipeline]
     runs-on: ubuntu-20.04
@@ -71,6 +72,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_MESSAGES: ${{ toJson(github.event.commits.*.message) }}
+
   build_notification:
     needs: [tag_release]
     runs-on: ubuntu-20.04  
@@ -89,6 +91,7 @@ jobs:
           severity: error
           details: Build failed
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          
   health_check:
     needs: [build_notification]
     runs-on: ubuntu-20.04  
@@ -97,7 +100,7 @@ jobs:
         uses: jtalk/url-health-check-action@v4
         if: ${{ github.event_name == 'schedule' }}
         with:
-          url: https://imitelis-pokedex.fly.dev/
+          url: ${{ secrets.FLY_APP_URL }}
           follow-redirect: false
           max-attempts: 3
           retry-delay: 5s
